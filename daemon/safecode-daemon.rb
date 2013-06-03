@@ -2,12 +2,36 @@
 require 'json'
 require 'faye/websocket'
 require 'eventmachine'
+require 'serialport'
 
 webservice_url = "http://localhost:4567/update"
+serial_port = "/dev/tty.usbmodem621"
+ok_code = "1212"
 
+box = SerialPort.new(serial_port, 9600, 8, 1, SerialPort::NONE)
+box.read_timeout = -1 # nonblock
+buf = ""
 EM.run {
   ws = Faye::WebSocket::Client.new(webservice_url)
-  status = {:box_connected => true, :session_state => :in_session, :session_start => Time.now.to_i, :session_length => 2*60}
+  status = {:box_connected => true, :session_state => :not_in_session, :session_start => Time.now.to_i, :session_length => 2*60}
+
+  EM::PeriodicTimer.new(1) do
+    box.each_char do |data|
+      buf += data
+    end
+    if(buf[-1] == '#') then
+      entered_code, length = buf[0..-2].split("*")
+      if(entered_code != ok_code) then
+        puts "invalid code"
+      else
+        status[:session_state] = :in_session
+        status[:session_start] = Time.now.to_i
+        status[:session_length] = length.to_i * 60
+        puts "logged in for #{length} minute session"
+      end
+      buf = ""
+    end
+  end
   
   EM::PeriodicTimer.new(2) do
     next if !ws
