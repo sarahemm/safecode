@@ -54,8 +54,11 @@ get '/update' do
         puts "received update"
         cmd = JSON.parse(msg, :symbolize_names => true)
         case cmd[:event].to_sym
+          when :client_arrived
+            settings.status[:session_state] = :pre_checkin
+            settings.status[:session_start] = Time.now.to_i
+            settings.status[:session_length] = 5*60 # TODO: implement configurable first-check-in time
           when :check_in
-            p cmd[:code]
             if(cmd[:code] == "1212") then # TODO: implement code configuration
               settings.status[:session_state] = :in_session
               settings.status[:session_start] = Time.now.to_i
@@ -63,6 +66,14 @@ get '/update' do
               puts "check-in ok"
             else
               puts "check-in request failed, bad code"
+              # TODO: implement failure
+            end
+          when :check_out
+            if(cmd[:code] == "1212") then # TODO: implement code configuration
+              settings.status[:session_state] = :not_in_session
+              puts "check-out ok"
+            else
+              puts "check-out request failed, bad code"
               # TODO: implement failure
             end
           else

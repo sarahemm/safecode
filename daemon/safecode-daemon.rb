@@ -19,25 +19,29 @@ EM.run {
       buf += data
     end
     if(buf[-1] == '#') then
-      code, length = buf[0..-2].split("*")
       cmd = Hash.new
-      cmd[:event] = :check_in
-      cmd[:code] = code
-      cmd[:length] = length.to_i
-      cmd[:distress] = false  # TODO: implement a distress code
-      ws.send cmd.to_json
-      puts "sending check-in request for #{length} minute session"
+      if(buf == "*#") then
+        cmd[:event] = :client_arrived
+        ws.send cmd.to_json
+        puts "sending client-arrived request"
+      elsif(buf[-2..-1] == "*#") then
+        code = buf[0..-3]
+        cmd[:event] = :check_out
+        cmd[:code] = code
+        ws.send cmd.to_json
+        puts "sending check-out request"
+      else
+        code, length = buf[0..-2].split("*")
+        cmd[:event] = :check_in
+        cmd[:code] = code
+        cmd[:length] = length.to_i
+        cmd[:distress] = false  # TODO: implement a distress code
+        ws.send cmd.to_json
+        puts "sending check-in request for #{length} minute session"
+      end
       buf = ""
     end
   end
-  
-#  EM::PeriodicTimer.new(2) do
-#    next if !ws
-#    p status
-#    status[:last_daemon_contact] = Time.now.to_i
-#    ws.send status.to_json
-#    puts "sending update to webservice: #{status.to_json}"
-#  end
   
   ws.on :open do |event|
     puts "websocket connection open"
