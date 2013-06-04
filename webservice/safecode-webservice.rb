@@ -52,7 +52,22 @@ get '/update' do
       end
       ws.onmessage do |msg|
         puts "received update"
-        settings.status = JSON.parse(msg, :symbolize_names => true)
+        cmd = JSON.parse(msg, :symbolize_names => true)
+        case cmd[:event].to_sym
+          when :check_in
+            p cmd[:code]
+            if(cmd[:code] == "1212") then # TODO: implement code configuration
+              settings.status[:session_state] = :in_session
+              settings.status[:session_start] = Time.now.to_i
+              settings.status[:session_length] = cmd[:length] * 60
+              puts "check-in ok"
+            else
+              puts "check-in request failed, bad code"
+              # TODO: implement failure
+            end
+          else
+            puts "bad command received on update socket"
+        end
       end
       ws.onclose do
         warn("update websocket closed")
