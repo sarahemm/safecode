@@ -13,7 +13,7 @@ get '/' do
   if !request.websocket?
     erb :index
   else
-    EM::PeriodicTimer.new(1) do
+    EM::PeriodicTimer.new(5) do # TODO: configurable interval
       settings.monitor_sockets.each do |sock|
         puts "sending update to monitor client"
         full_status = settings.status

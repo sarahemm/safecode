@@ -14,6 +14,22 @@ function set_connected_status(component, component_text, status) {
   elem.className = class_name;
 }
 
+function set_last_comms(time) {
+  var last_comm = document.getElementById("status_comms");
+  var lost_comm_warn = document.getElementById("lost_connection");
+  last_comm.innerHTML = "Last communication " + time + " seconds ago";
+  if(time < 15) {
+    last_comm.className = "label label-success";
+    lost_comm_warn.style.cssText = "display: none;";
+  } else if(time < 30) {
+    last_comm.className = "label label-warning"
+    lost_comm_warn.style.cssText = "display: none;";
+  } else {
+    last_comm.className = "label label-important"
+    lost_comm_warn.style.cssText = "";
+  }
+}
+
 function set_session_info(state, time, length) {
   if(state == 'not_in_session') {
     state_text = "Not in session";
@@ -29,9 +45,11 @@ function set_session_info(state, time, length) {
     progress_pct = (length-time) / length * 100;
   } else if(state == 'not_ok') {
     state_text = "Initial check-in NOT OK";
+    checkin_text = ""
     progress_pct = 0;
   } else {
     state_text = "Unknown";
+    checkin_text = ""
     progress_pct = 0;
   }
   document.getElementById('session_state').innerHTML = state_text;
@@ -42,6 +60,8 @@ function set_session_info(state, time, length) {
 window.onload = function() {(
   function() {
     var ws       = new WebSocket('ws://' + window.location.host + window.location.pathname);
+    var last_status;
+    var last_comms = -1;
     ws.onopen    = function()  {
       set_connected_status('webservice', 'Web Service', true);
     };
@@ -51,10 +71,18 @@ window.onload = function() {(
       set_connected_status('box', 'SafeCode Box', 'unknown');
     }
     ws.onmessage = function(msg) {
-      status_msg = JSON.parse(msg.data);
-      set_connected_status('daemon', 'Room Daemon', status_msg.daemon_connection);
-      set_connected_status('box', 'SafeCode Box', status_msg.box_connection);
-      set_session_info(status_msg.session_state, status_msg.time_until_checkin, status_msg.session_length);
+      last_status = JSON.parse(msg.data);
+      set_connected_status('daemon', 'Room Daemon', last_status.daemon_connection);
+      set_connected_status('box', 'SafeCode Box', last_status.box_connection);
+      set_session_info(last_status.session_state, last_status.time_until_checkin, last_status.session_length);
+      last_comms = 0; 
     };
+    setInterval(function() {
+      if(!last_status) { return; }
+      last_status.time_until_checkin--;
+      set_session_info(last_status.session_state, last_status.time_until_checkin, last_status.session_length);
+      last_comms++;
+      set_last_comms(last_comms);
+    }, 1000);
   })();
 }

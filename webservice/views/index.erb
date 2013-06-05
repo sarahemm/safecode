@@ -54,6 +54,9 @@
           <div class="progress progress-success progress-striped">
             <div id='session_progress' class="bar" style="width: 0%"></div>
           </div>
+          <div id='lost_connection' class='text-error text-center' style='display: none'>
+            <h1>LOST CONNECTION</h1>
+          </div>
         </div>
         <div id="push"></div> <!-- push the footer below to the bottom -->
       </div> <!-- /container -->
@@ -64,11 +67,13 @@
       <div class="navbar-inner">
         <div class="container">
           <ul class="nav">
-            <li><a href="#"><span id="status_webservice" class="label label-default">Web Service Initializing</span></a></li>
+            <li><a href="#"><span   id="status_webservice" class="label label-default">Web Service Initializing</span></a></li>
             <li class="divider-vertical"></li>
-            <li><a href="#"><span     id="status_daemon" class="label label-default">Room Daemon Initializing</span></a></li>
+            <li><a href="#"><span       id="status_daemon" class="label label-default">Room Daemon Initializing</span></a></li>
             <li class="divider-vertical"></li>
-            <li><a href="#"><span        id="status_box" class="label label-default">SafeCode Box Initializing</span></a></li>
+            <li><a href="#"><span          id="status_box" class="label label-default">SafeCode Box Initializing</span></a></li>
+            <li class="divider-vertical"></li>
+            <li><a href="#"><span        id="status_comms" class="label label-default">Last Communication Unknown</span></a></li>
           </ul>
         </div>
       </div>
