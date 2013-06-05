@@ -35,26 +35,43 @@ function set_session_info(state, time, length) {
     state_text = "Not in session";
     checkin_text = ""
     progress_pct = 0;
+    bar_class = "success";
   } else if(state == 'pre_checkin') {
     state_text = "Client arrived, waiting for initial check-in";
     checkin_text = "Next check-in expected in " + Math.floor(time / 60) + "m " + time % 60 + "s";
     progress_pct = (length-time) / length * 100;
+    if(time >= 0) {
+      bar_class = "success";
+      checkin_text = "Next check-in expected in " + Math.floor(time / 60) + "m " + time % 60 + "s";
+    } else {
+      bar_class = "danger active";
+      checkin_text = "Next check-in was expected " + Math.floor(Math.abs(time) / 60) + "m " + Math.abs(time) % 60 + "s ago!";
+    }
   } else if(state == 'in_session') {
     state_text = "In session, initial check-in OK";
-    checkin_text = "Next check-in expected in " + Math.floor(time / 60) + "m " + time % 60 + "s";
     progress_pct = (length-time) / length * 100;
+    if(time >= 0) {
+      bar_class = "success";
+      checkin_text = "Next check-in expected in " + Math.floor(time / 60) + "m " + time % 60 + "s";
+    } else {
+      bar_class = "danger active";
+      checkin_text = "Next check-in was expected " + Math.floor(Math.abs(time) / 60) + "m " + Math.abs(time) % 60 + "s ago!";
+    }
   } else if(state == 'not_ok') {
     state_text = "Initial check-in NOT OK";
     checkin_text = ""
-    progress_pct = 0;
+    progress_pct = 100;
+    bar_class = "danger active";
   } else {
     state_text = "Unknown";
     checkin_text = ""
     progress_pct = 0;
+    bar_class = "success";
   }
   document.getElementById('session_state').innerHTML = state_text;
   document.getElementById('time_until_checkin').innerHTML = checkin_text;
-  document.getElementById('session_progress').style.cssText = "width: " + progress_pct + "%;";
+  document.getElementById('session_progress_bar').style.cssText = "width: " + progress_pct + "%;";
+  document.getElementById('session_progress').className = "progress progress-" + bar_class + " progress-striped";
 }
 
 window.onload = function() {(

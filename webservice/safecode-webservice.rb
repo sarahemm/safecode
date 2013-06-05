@@ -57,7 +57,7 @@ get '/update' do
           when :client_arrived
             settings.status[:session_state] = :pre_checkin
             settings.status[:session_start] = Time.now.to_i
-            settings.status[:session_length] = 5*60 # TODO: implement configurable first-check-in time
+            settings.status[:session_length] = 1*60 # TODO: implement configurable first-check-in time
           when :check_in
             if(cmd[:code] == "1212") then # TODO: implement code configuration
               settings.status[:session_state] = :in_session
