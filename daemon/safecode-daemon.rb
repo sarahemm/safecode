@@ -29,7 +29,24 @@ EM.run {
   end
   
   ws.on :message do |event|
-    p [:message, event.data]
+    response = JSON.parse(event.data, :symbolize_names => true)
+    p response
+    # TODO: error state should clear after a second or two
+    case(response[:status])
+      when "ok"
+        case(response[:state])
+          when "not_in_session"
+            box.status = [:red]
+          when "pre_checkin"
+            box.status = [:yellow]
+          when "in_session"
+            box.status = [:green]
+          else
+            box.status = [:blue]
+        end
+      else
+        box.status = [:blue]
+    end
   end
   
   ws.on :close do |event|

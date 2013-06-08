@@ -6,7 +6,7 @@ require 'sinatra-websocket'
 set :server, 'thin'
 set :monitor_sockets, []
 set :update_socket, nil
-set :status, {}
+set :status, {:session_state => :not_in_session}
 
 # monitor connections from web browsers
 get '/' do
@@ -53,11 +53,16 @@ get '/update' do
       ws.onmessage do |msg|
         puts "received update"
         cmd = JSON.parse(msg, :symbolize_names => true)
+        cmd_status = :ok
         case cmd[:event].to_sym
           when :client_arrived
-            settings.status[:session_state] = :pre_checkin
-            settings.status[:session_start] = Time.now.to_i
-            settings.status[:session_length] = 1*60 # TODO: implement configurable first-check-in time
+            if(settings.status[:session_state] == :not_in_session) then              
+              settings.status[:session_state] = :pre_checkin
+              settings.status[:session_start] = Time.now.to_i
+              settings.status[:session_length] = 1*60 # TODO: implement configurable first-check-in time
+            else
+              cmd_status = :fail
+            end
           when :check_in
             if(cmd[:code] == "1212") then # TODO: implement code configuration
               settings.status[:session_state] = :in_session
@@ -66,7 +71,7 @@ get '/update' do
               puts "check-in ok"
             else
               puts "check-in request failed, bad code"
-              # TODO: implement failure
+              cmd_status = :fail
             end
           when :check_out
             if(cmd[:code] == "1212") then # TODO: implement code configuration
@@ -74,11 +79,16 @@ get '/update' do
               puts "check-out ok"
             else
               puts "check-out request failed, bad code"
-              # TODO: implement failure
+              cmd_status = :fail
             end
           else
             puts "bad command received on update socket"
+            cmd_status = :error
         end
+        response = Hash.new
+        response[:status] = cmd_status
+        response[:state] = settings.status[:session_state]
+        ws.send response.to_json
       end
       ws.onclose do
         warn("update websocket closed")

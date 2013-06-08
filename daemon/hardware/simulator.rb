@@ -12,6 +12,9 @@
 # --------
 # none yet
 
+require 'term/ansicolor'
+include Term::ANSIColor
+
 module SafeCode
   class Hardware
     class Simulator
@@ -61,12 +64,12 @@ module SafeCode
         @buf = ""
       end
       
-      def set_lighting(lighting)
-        #@box.print (lighting.includes?(:red)   ? "R" : "r")
-        #@box.print (lighting.includes?(:green) ? "G" : "g")
-        #@box.print (lighting.includes?(:blue)  ? "B" : "b")
-        #true
-        false
+      def status=(lighting)
+        print red, bold,    "RED",    reset, "\n" if lighting.include? :red
+        print green, bold,  "GREEN",  reset, "\n" if lighting.include? :green
+        print blue, bold,   "BLUE",   reset, "\n" if lighting.include? :blue
+        print yellow, bold, "YELLOW", reset, "\n" if lighting.include? :yellow
+        true
       end
       
       def set_text
