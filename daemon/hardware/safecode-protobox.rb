@@ -23,7 +23,7 @@ module SafeCode
         connect
       end
       
-      def connect(@port)
+      def connect
         return true if @box != nil
         #puts "no connection to SafeCode box, reconnecting..."
         begin
