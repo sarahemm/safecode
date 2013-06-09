@@ -1,12 +1,81 @@
 #!/opt/local/bin/ruby1.9
 require 'json'
+require 'statemachine'
 require 'sinatra'
 require 'sinatra-websocket'
 
 set :server, 'thin'
-set :monitor_sockets, []
-set :update_socket, nil
-set :status, {:session_state => :not_in_session}
+@@update_socket = nil
+@@monitor_sockets = []
+
+class SafeCodeContext
+  attr_accessor :statemachine, :session_length, :session_start
+  
+  class AuthFailedError < SecurityError
+  end
+  
+  def initialize
+  end
+  
+  def initialize_session(length)
+    puts "initializing new session"
+    @session_start = Time.now.to_i
+    @session_length = length
+    notify_monitors
+  end
+  
+  def session_ended(code)
+    puts "checking code #{code}"
+    raise AuthFailedError if code != "1212"  # TODO: configurable code
+    notify_monitors
+  end
+
+  def checked_in(code, length)
+    puts "checking code #{code}"
+    raise AuthFailedError if code != "1212"  # TODO: configurable code
+    initialize_session(length)
+    notify_monitors
+  end
+  
+  def notify_monitors
+    puts "notifying monitors of transition to #{@statemachine.state}"
+    @@monitor_sockets.each do |sock|
+      puts "sending update to monitor client"
+      status_update = Hash.new
+      status_update[:session_state] = @statemachine.state
+      status_update[:session_start] = @session_start;
+      status_update[:session_length] = @session_length;
+      status_update[:daemon_connection] = (@@update_socket == nil ? false : true)
+      if(@session_start != nil) then
+        status_update[:time_until_checkin] = (@session_start + @session_length) - Time.now.to_i
+      end
+      sock.send status_update.to_json
+    end
+  end
+end
+
+fsm = Statemachine.build do
+  state :not_in_session do
+    event     :client_arrived,  :pre_checkin
+    on_entry  :notify_monitors
+  end
+  state :pre_checkin do
+    event     :checked_in,      :in_session
+    event     :session_ended,   :not_in_session
+    on_entry  :initialize_session
+  end
+  state :in_session do
+    event     :session_ended,   :not_in_session
+    on_entry  :checked_in
+  end
+
+  trans :pre_checkin, :session_ended, :not_in_session, :session_ended  
+  trans :in_session,  :session_ended, :not_in_session, :session_ended
+  
+  context SafeCodeContext.new
+end
+
+set :fsm, fsm
 
 # monitor connections from web browsers
 get '/' do
@@ -14,27 +83,20 @@ get '/' do
     erb :index
   else
     EM::PeriodicTimer.new(5) do # TODO: configurable interval
-      settings.monitor_sockets.each do |sock|
-        puts "sending update to monitor client"
-        full_status = settings.status
-        full_status[:daemon_connection] = (settings.update_socket == nil ? false : true)
-        if(full_status[:session_state] && (full_status[:session_state].to_sym == :pre_checkin || full_status[:session_state].to_sym == :in_session)) then
-          full_status[:time_until_checkin] = (full_status[:session_start] + full_status[:session_length]) - Time.now.to_i
-        end
-        sock.send full_status.to_json
-      end
+      puts "sending update to monitor client"
+      settings.fsm.context.notify_monitors
     end
     request.websocket do |ws|
       ws.onopen do
         warn("monitor websocket opened")
-        settings.monitor_sockets << ws
+        @@monitor_sockets << ws
       end
       ws.onmessage do |msg|
         warn("message received from monitor websocket, ignored")
       end
       ws.onclose do
         warn("monitor websocket closed")
-        settings.monitor_sockets.delete(ws)
+        @@monitor_sockets.delete(ws)
       end
     end
   end
@@ -47,52 +109,38 @@ get '/update' do
   else
     request.websocket do |ws|
       ws.onopen do
+        # TODO: add protection against a second connection overriding the first
         warn("update websocket opened")
-        settings.update_socket = ws
+        @@update_socket = ws
       end
       ws.onmessage do |msg|
         puts "received update"
         cmd = JSON.parse(msg, :symbolize_names => true)
         cmd_status = :ok
-        case cmd[:event].to_sym
-          when :client_arrived
-            if(settings.status[:session_state] == :not_in_session) then              
-              settings.status[:session_state] = :pre_checkin
-              settings.status[:session_start] = Time.now.to_i
-              settings.status[:session_length] = 1*60 # TODO: implement configurable first-check-in time
+        begin
+          case cmd[:event].to_sym
+            when :client_arrived
+              settings.fsm.client_arrived(1*60) # TODO: implement configurable first-check-in time
+            when :check_in
+              settings.fsm.checked_in(cmd[:code], cmd[:length] * 60)
+            when :check_out
+              settings.fsm.session_ended(cmd[:code])
             else
-              cmd_status = :fail
-            end
-          when :check_in
-            if(cmd[:code] == "1212") then # TODO: implement code configuration
-              settings.status[:session_state] = :in_session
-              settings.status[:session_start] = Time.now.to_i
-              settings.status[:session_length] = cmd[:length] * 60
-              puts "check-in ok"
-            else
-              puts "check-in request failed, bad code"
-              cmd_status = :fail
-            end
-          when :check_out
-            if(cmd[:code] == "1212") then # TODO: implement code configuration
-              settings.status[:session_state] = :not_in_session
-              puts "check-out ok"
-            else
-              puts "check-out request failed, bad code"
-              cmd_status = :fail
-            end
-          else
-            puts "bad command received on update socket"
-            cmd_status = :error
+              puts "bad command received on update socket"
+              cmd_status = :error
+          end
+        rescue SafeCodeContext::AuthFailedError
+          cmd_status = :fail
         end
         response = Hash.new
         response[:status] = cmd_status
-        response[:state] = settings.status[:session_state]
+        response[:state] = settings.fsm.state
+        p response.to_json
         ws.send response.to_json
       end
       ws.onclose do
         warn("update websocket closed")
-        settings.update_socket = nil
+        @@update_socket = nil
       end
     end
   end
