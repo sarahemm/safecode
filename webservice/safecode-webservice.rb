@@ -7,6 +7,7 @@ require 'sinatra-websocket'
 set :server, 'thin'
 @@update_socket = nil
 @@monitor_sockets = []
+@@location = "Unknown"
 
 class SafeCodeContext
   attr_accessor :statemachine, :session_length, :session_start
@@ -92,7 +93,10 @@ get '/' do
         @@monitor_sockets << ws
       end
       ws.onmessage do |msg|
-        warn("message received from monitor websocket, ignored")
+        puts "received location update"
+        update = JSON.parse(msg, :symbolize_names => true)
+        # TODO: auth
+        @@location = update[:location]
       end
       ws.onclose do
         warn("monitor websocket closed")

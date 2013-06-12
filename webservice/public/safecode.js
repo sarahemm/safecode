@@ -106,7 +106,7 @@ window.onload = function() {(
 }
 
 function sendLocationUpdate(location, token) {
-  var updateMsg;
+  var updateMsg = {};
   updateMsg['location'] = location;
   updateMsg['token'] = token;
   ws.send(JSON.stringify(updateMsg));
