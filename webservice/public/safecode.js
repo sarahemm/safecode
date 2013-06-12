@@ -74,9 +74,10 @@ function set_session_info(state, time, length) {
   document.getElementById('session_progress').className = "progress progress-" + bar_class + " progress-striped";
 }
 
+var ws;
 window.onload = function() {(
   function() {
-    var ws       = new WebSocket('ws://' + window.location.host + window.location.pathname);
+    ws = new WebSocket('ws://' + window.location.host + window.location.pathname);
     var last_status;
     var last_comms = -1;
     ws.onopen    = function()  {
@@ -102,4 +103,11 @@ window.onload = function() {(
       set_last_comms(last_comms);
     }, 1000);
   })();
+}
+
+function sendLocationUpdate(location, token) {
+  var updateMsg;
+  updateMsg['location'] = location;
+  updateMsg['token'] = token;
+  ws.send(JSON.stringify(updateMsg));
 }

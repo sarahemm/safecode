@@ -8,6 +8,8 @@
     <meta name="author" content="">
 
     <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="bootstrap/js/bootstrap.js" type='text/javascript'></script>
     <script src="safecode.js" type='text/javascript'></script>
     
     <link href="bootstrap-stickyfooter.css" rel="stylesheet">
@@ -38,17 +40,17 @@
             </button>
             <a class="brand" href="#">SafeCode Monitoring</a>
             <div class="nav-collapse collapse">
-              <ul class="nav">
-                <li class="active"><a href="#">Monitor</a></li>
-                <li><a href="#update">Update</a></li>
+              <ul class="nav" id="navTabs">
+                <li class="active"><a href="#monitor" data-toggle="tab">Monitor</a></li>
+                <li><a href="#update" data-toggle="tab">Update</a></li>
               </ul>
             </div><!--/.nav-collapse -->
           </div>
         </div>
       </div>
 
-      <div class="container">
-        <div class="page-header text-center">
+      <div class="tab-content container">
+        <div class="tab-pane active page-header text-center" id="monitor">
           <h1 id='session_state'></h1>
           <h2 id='time_until_checkin'></h2>
           <div id="session_progress" class="progress progress-success progress-striped">
@@ -58,11 +60,22 @@
             <h1>LOST CONNECTION</h1>
           </div>
         </div>
+        <div class="tab-pane" id="update">
+          <h1>Update Data</h1>
+          <form id='updateForm' onsubmit="sendLocationUpdate($('#location').val(), $('#token').val()); return false;">
+            <label>Location</label>
+            <input type='text' id='location'>
+            <label>Authentication Token</label>
+            <input type='text' id='token'>
+            <div class='control-group'>
+              <button type='submit' class='btn'>Send Update</button>
+            </div>
+          </form>
+        </div>
         <div id="push"></div> <!-- push the footer below to the bottom -->
       </div> <!-- /container -->
     </div>
-    
-    
+		
     <div class="navbar navbar-fixed-bottom">
       <div class="navbar-inner">
         <div class="container">
