@@ -1,5 +1,6 @@
 #!/opt/local/bin/ruby1.9
 require 'json'
+require 'yaml'
 require 'yubikey'
 require 'statemachine'
 require 'sinatra'
@@ -9,6 +10,8 @@ set :server, 'thin'
 @@update_socket = nil
 @@monitor_sockets = []
 @@location = "Unknown"
+
+cfg = YAML.load_file "safecode.yaml"
 
 class SafeCodeContext
   attr_accessor :statemachine, :session_length, :session_start
@@ -57,7 +60,7 @@ class SafeCodeContext
   end
 end
 
-fsm = Statemachine.build do
+@@fsm = Statemachine.build do
   state :not_in_session do
     event     :client_arrived,  :pre_checkin
     on_entry  :notify_monitors
@@ -78,10 +81,9 @@ fsm = Statemachine.build do
   context SafeCodeContext.new
 end
 
-set :fsm, fsm
-set :yubikey_api_client, 12345
-set :yubikey_api_key, 'placeholdermeow'
-set :yubikey_accepted_key, 'meowmeowmeow'
+set :yubikey_api_client, cfg['yubikey']['api_client']
+set :yubikey_api_key, cfg['yubikey']['api_key']
+set :yubikey_accepted_key, cfg['yubikey']['key_id']
 
 # monitor connections from web browsers
 get '/' do
@@ -90,7 +92,7 @@ get '/' do
   else
     EM::PeriodicTimer.new(5) do # TODO: configurable interval
       puts "sending update to monitor client"
-      settings.fsm.context.notify_monitors
+      @@fsm.context.notify_monitors
     end
     request.websocket do |ws|
       ws.onopen do
@@ -135,11 +137,11 @@ get '/update' do
         begin
           case cmd[:event].to_sym
             when :client_arrived
-              settings.fsm.client_arrived(1*60) # TODO: implement configurable first-check-in time
+              @@fsm.client_arrived(1*60) # TODO: implement configurable first-check-in time
             when :check_in
-              settings.fsm.checked_in(cmd[:code], cmd[:length] * 60)
+              @@fsm.checked_in(cmd[:code], cmd[:length] * 60)
             when :check_out
-              settings.fsm.session_ended(cmd[:code])
+              @@fsm.session_ended(cmd[:code])
             else
               puts "bad command received on update socket"
               cmd_status = :error
@@ -149,7 +151,7 @@ get '/update' do
         end
         response = Hash.new
         response[:status] = cmd_status
-        response[:state] = settings.fsm.state
+        response[:state] = @@fsm.state
         p response.to_json
         ws.send response.to_json
       end
