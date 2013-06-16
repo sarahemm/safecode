@@ -4,14 +4,14 @@ require 'yaml'
 require 'yubikey'
 require 'statemachine'
 require 'sinatra'
+require 'sinatra/config_file'
 require 'sinatra-websocket'
 
 set :server, 'thin'
+config_file '../safecode.yaml'
 @@update_socket = nil
 @@monitor_sockets = []
 @@location = "Unknown"
-
-cfg = YAML.load_file "safecode.yaml"
 
 class SafeCodeContext
   attr_accessor :statemachine, :session_length, :session_start
@@ -81,12 +81,13 @@ end
   context SafeCodeContext.new
 end
 
-set :yubikey_api_client, cfg['yubikey']['api_client']
-set :yubikey_api_key, cfg['yubikey']['api_key']
-set :yubikey_accepted_key, cfg['yubikey']['key_id']
+#set :yubikey_api_client, cfg['yubikey']['api_client']
+#set :yubikey_api_key, cfg['yubikey']['api_key']
+#set :yubikey_accepted_key, cfg['yubikey']['key_id']
 
 # monitor connections from web browsers
 get '/' do
+  p settings.yubikey
   if !request.websocket?
     erb :index
   else
@@ -102,8 +103,7 @@ get '/' do
       ws.onmessage do |msg|
         puts "received location update"
         update = JSON.parse(msg, :symbolize_names => true)
-        p update
-        otp = Yubikey::OTP::Verify.new(:api_id => settings.yubikey_api_client, :api_key => settings.yubikey_api_key, :otp => update[:token])
+        otp = Yubikey::OTP::Verify.new(:api_id => settings.yubikey['api_client'], :api_key => settings.yubikey['api_key'], :otp => update[:token])
         if(otp.valid?) then
           puts "location update authenticated OK"
           @@location = update[:location] if otp.valid?
