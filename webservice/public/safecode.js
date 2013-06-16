@@ -79,11 +79,10 @@ function set_session_info(state, time, length) {
 }
 
 var ws;
-window.onload = function() {(
-  function() {
+var last_status;
+var last_comms = -1;
+function connectWebservice() {
     ws = new WebSocket('ws://' + window.location.host + window.location.pathname);
-    var last_status;
-    var last_comms = -1;
     ws.onopen    = function()  {
       set_connected_status('webservice', 'Web Service', true);
     };
@@ -100,14 +99,6 @@ window.onload = function() {(
       $('#location_text').html("Location: " + last_status.location);
       last_comms = 0; 
     };
-    setInterval(function() {
-      if(!last_status) { return; }
-      last_status.time_until_checkin--;
-      set_session_info(last_status.session_state, last_status.time_until_checkin, last_status.session_length);
-      last_comms++;
-      set_last_comms(last_comms);
-    }, 1000);
-  })();
 }
 
 function sendLocationUpdate(location, token) {
@@ -115,4 +106,25 @@ function sendLocationUpdate(location, token) {
   updateMsg['location'] = location;
   updateMsg['token'] = token;
   ws.send(JSON.stringify(updateMsg));
+}
+
+window.onload = function() {
+  connectWebservice();
+  
+  // timer to update the UI once a second
+  setInterval(function() {
+    if(!last_status) { return; }
+    last_status.time_until_checkin--;
+    set_session_info(last_status.session_state, last_status.time_until_checkin, last_status.session_length);
+    last_comms++;
+    set_last_comms(last_comms);
+  }, 1000);
+  
+  // timer to reconnect if we get disconnected
+  setInterval(function() {
+    if(ws.readyState == 3) {
+      console.log("Reconnecting to webservice");
+      connectWebservice();
+    }
+  }, 5000);
 }
