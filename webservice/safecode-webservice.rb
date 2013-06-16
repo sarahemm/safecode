@@ -43,9 +43,9 @@ class SafeCodeContext
   end
   
   def notify_monitors
-    puts "notifying monitors of transition to #{@statemachine.state}"
     @@monitor_sockets.each do |sock|
-      puts "sending update to monitor client"
+      p sock
+      puts "sending update to monitor client #{sock}"
       status_update = Hash.new
       status_update[:session_state] = @statemachine.state
       status_update[:session_start] = @session_start;
@@ -92,7 +92,6 @@ get '/' do
     erb :index
   else
     EM::PeriodicTimer.new(5) do # TODO: configurable interval
-      puts "sending update to monitor client"
       @@fsm.context.notify_monitors
     end
     request.websocket do |ws|
