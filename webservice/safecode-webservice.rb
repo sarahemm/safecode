@@ -103,7 +103,12 @@ get '/' do
       ws.onmessage do |msg|
         puts "received location update"
         update = JSON.parse(msg, :symbolize_names => true)
-        otp = Yubikey::OTP::Verify.new(:api_id => settings.yubikey['api_client'], :api_key => settings.yubikey['api_key'], :otp => update[:token])
+        next if update[:token][0..11] != settings.yubikey['key_id']
+        begin
+          otp = Yubikey::OTP::Verify.new(:api_id => settings.yubikey['api_client'], :api_key => settings.yubikey['api_key'], :otp => update[:token])
+          rescue Yubikey::OTP::InvalidOTPError
+          next
+        end
         if(otp.valid?) then
           puts "location update authenticated OK"
           @@location = update[:location] if otp.valid?
