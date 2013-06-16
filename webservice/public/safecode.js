@@ -1,3 +1,7 @@
+function resetForm(formName) {
+  document.getElementById(formName).reset();
+}
+
 function set_connected_status(component, component_text, status) {
   if(status == true) {
     status_text = component_text + " Connected";
@@ -93,6 +97,7 @@ window.onload = function() {(
       set_connected_status('daemon', 'Room Daemon', last_status.daemon_connection);
       set_connected_status('box', 'SafeCode Box', last_status.box_connection);
       set_session_info(last_status.session_state, last_status.time_until_checkin, last_status.session_length);
+      $('#location_text').html("Location: " + last_status.location);
       last_comms = 0; 
     };
     setInterval(function() {

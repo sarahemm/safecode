@@ -1,5 +1,6 @@
 #!/opt/local/bin/ruby1.9
 require 'json'
+require 'yubikey'
 require 'statemachine'
 require 'sinatra'
 require 'sinatra-websocket'
@@ -46,6 +47,7 @@ class SafeCodeContext
       status_update[:session_state] = @statemachine.state
       status_update[:session_start] = @session_start;
       status_update[:session_length] = @session_length;
+      status_update[:location] = @@location;
       status_update[:daemon_connection] = (@@update_socket == nil ? false : true)
       if(@session_start != nil) then
         status_update[:time_until_checkin] = (@session_start + @session_length) - Time.now.to_i
@@ -77,6 +79,9 @@ fsm = Statemachine.build do
 end
 
 set :fsm, fsm
+set :yubikey_api_client, 12345
+set :yubikey_api_key, 'placeholdermeow'
+set :yubikey_accepted_key, 'meowmeowmeow'
 
 # monitor connections from web browsers
 get '/' do
@@ -95,8 +100,14 @@ get '/' do
       ws.onmessage do |msg|
         puts "received location update"
         update = JSON.parse(msg, :symbolize_names => true)
-        # TODO: auth
-        @@location = update[:location]
+        p update
+        otp = Yubikey::OTP::Verify.new(:api_id => settings.yubikey_api_client, :api_key => settings.yubikey_api_key, :otp => update[:token])
+        if(otp.valid?) then
+          puts "location update authenticated OK"
+          @@location = update[:location] if otp.valid?
+        else
+          puts "location update authentication failed"
+        end
       end
       ws.onclose do
         warn("monitor websocket closed")

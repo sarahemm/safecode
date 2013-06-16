@@ -44,6 +44,7 @@
                 <li class="active"><a href="#monitor" data-toggle="tab">Monitor</a></li>
                 <li><a href="#update" data-toggle="tab">Update</a></li>
               </ul>
+              <p class='navbar-text pull-right' id='location_text'>Location: Unknown</p>
             </div><!--/.nav-collapse -->
           </div>
         </div>
@@ -62,11 +63,11 @@
         </div>
         <div class="tab-pane" id="update">
           <h1>Update Data</h1>
-          <form id='updateForm' onsubmit="sendLocationUpdate($('#location').val(), $('#token').val()); return false;">
+          <form id='updateForm' onsubmit="sendLocationUpdate($('#location').val(), $('#token').val()); resetForm('updateForm'); return false;">
             <label>Location</label>
             <input type='text' id='location'>
             <label>Authentication Token</label>
-            <input type='text' id='token'>
+            <input type='text' id='token' autocomplete='off'>
             <div class='control-group'>
               <button type='submit' class='btn'>Send Update</button>
             </div>
