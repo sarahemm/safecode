@@ -4,13 +4,15 @@ require 'faye/websocket'
 require 'eventmachine'
 require 'serialport'
 require './hardware/simulator.rb'
+require './hardware/safecode-box.rb'
 require './hardware/safecode-protobox.rb'
 
 webservice_url = "http://localhost:4567/update"
 serial_port = "/dev/tty.usbmodem621"
 
 #box = SafeCode::Hardware::SafeCodeProtoBox.new :port => serial_port
-box = SafeCode::Hardware::Simulator.new
+box = SafeCode::Hardware::SafeCodeBox.new :port => serial_port
+#box = SafeCode::Hardware::Simulator.new
 
 EM.run {
   ws = Faye::WebSocket::Client.new(webservice_url)
