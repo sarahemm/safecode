@@ -152,6 +152,8 @@ get '/update' do
           end
         rescue SafeCodeContext::AuthFailedError
           cmd_status = :fail
+        rescue Statemachine::TransitionMissingException
+          cmd_status = :fail
         end
         response = Hash.new
         response[:status] = cmd_status
