@@ -1,0 +1,22 @@
+$quality = 3;
+
+kp_width = 123.5;
+kp_height = 118;
+corner_radius = 7;
+cutout_border = 35;
+bolt_dia = 3.25;
+
+difference() {
+  square([kp_width, kp_height], r=corner_radius);
+  translate([+10.5, +12.5]) {
+    circle(r=bolt_dia/2);
+    translate([+102, 0])
+      circle(r=bolt_dia/2);
+	translate([0,    +93.5])
+      circle(r=bolt_dia/2);
+	translate([+102, +93.5])
+      circle(r=bolt_dia/2);
+  }
+  translate([cutout_border/2, cutout_border/2])
+    square([kp_width-cutout_border, kp_height-cutout_border], r=corner_radius);
+}
