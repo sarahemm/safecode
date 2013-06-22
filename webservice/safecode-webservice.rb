@@ -135,11 +135,11 @@ get '/update' do
         @@update_socket = ws
       end
       ws.onmessage do |msg|
-        puts "received update"
         cmd = JSON.parse(msg, :symbolize_names => true)
         cmd_status = :ok
         begin
           case cmd[:event].to_sym
+            when :keepalive
             when :client_arrived
               @@fsm.client_arrived(1*60) # TODO: implement configurable first-check-in time
             when :check_in
@@ -158,7 +158,6 @@ get '/update' do
         response = Hash.new
         response[:status] = cmd_status
         response[:state] = @@fsm.state
-        p response.to_json
         ws.send response.to_json
       end
       ws.onclose do

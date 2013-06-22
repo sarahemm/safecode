@@ -20,9 +20,13 @@ EM.run {
   EM::PeriodicTimer.new(1) do
     next if !box.connected? or !ws
     #puts "Checking box"
-    box.each_event do |event|
-      puts "sending event #{event[:event]} to webservice"
-      ws.send event.to_json
+    if(box.events.length == 0) then
+      ws.send({:event => :keepalive}.to_json)
+    else
+      box.each_event do |event|
+        puts "sending event #{event[:event]} to webservice"
+        ws.send event.to_json
+      end
     end
   end
   
@@ -32,8 +36,6 @@ EM.run {
   
   ws.on :message do |event|
     response = JSON.parse(event.data, :symbolize_names => true)
-    p response
-    # TODO: error state should clear after a second or two
     case(response[:status])
       when "ok"
         case(response[:state])
