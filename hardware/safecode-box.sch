@@ -12297,10 +12297,10 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="FRAME1" library="logos-sen" deviceset="FRAME-LETTER-GRID-OSHW-SEN" device="OSHW-LOGO-L">
 <attribute name="REV" value="001"/>
 </part>
-<part name="TP1" library="testpad" deviceset="TPSQ" device="B2,54" value="3.3V"/>
+<part name="TP1" library="testpad" deviceset="TPSQ" device="B2,54" value="GND"/>
 <part name="P+5" library="SparkFun" deviceset="3.3V" device=""/>
 <part name="TP2" library="testpad" deviceset="TPSQ" device="B2,54" value="3.3V"/>
-<part name="TP3" library="testpad" deviceset="TPSQ" device="B2,54" value="3.3V"/>
+<part name="TP3" library="testpad" deviceset="TPSQ" device="B2,54" value="VBUS"/>
 <part name="GND10" library="supply1" deviceset="GND" device=""/>
 </parts>
 <sheets>
