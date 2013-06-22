@@ -44,7 +44,6 @@ module SafeCode
       
       def each_event
         get_data
-        p @buf
         process_events
         while(!@event_queue.empty?) do
           yield @event_queue.shift
@@ -63,6 +62,12 @@ module SafeCode
         true
       end
       
+      def events
+        get_data
+        process_events
+        @event_queue
+      end
+      
       def process_events
         if(@buf[-1] == 'X') then
           @buf = ""
@@ -77,7 +82,6 @@ module SafeCode
           code = @buf[0..-2]
           event[:event] = :check_out
           event[:code] = code
-          p code
           @event_queue << event
           @buf = ""
         elsif(@buf[-1] == "E") then
