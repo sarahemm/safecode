@@ -4,9 +4,7 @@ kp_width = 123.5;
 kp_height = 118;
 corner_radius = 7;
 cutout_border = 35;
-bolt_dia = 6;
-usb_width = 8.5;
-usb_depth = 6.5;
+bolt_dia = 3.5;
 
 difference() {
   // outside
@@ -20,12 +18,5 @@ difference() {
       circle(r=bolt_dia/2);
 	  translate([+102, +93.5])
       circle(r=bolt_dia/2);
-  }
-  // cutout inside
-  translate([cutout_border/2, cutout_border/2])
-    square([kp_width-cutout_border, kp_height-cutout_border], r=corner_radius);
-  // cutout for usb connector
-  translate([kp_width/2-usb_width/2, kp_height-usb_depth]) {
-    square([usb_width, usb_depth]);
   }
 }
