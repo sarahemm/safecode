@@ -44,7 +44,6 @@ class SafeCodeContext
   
   def notify_monitors
     @@monitor_sockets.each do |sock|
-      p sock
       puts "sending update to monitor client #{sock}"
       status_update = Hash.new
       status_update[:session_state] = @statemachine.state
@@ -72,10 +71,12 @@ end
   end
   state :in_session do
     event     :session_ended,   :not_in_session
-    on_entry  :checked_in
+    on_entry  :notify_monitors
   end
 
-  trans :pre_checkin, :session_ended, :not_in_session, :session_ended  
+  # initial state, event, destination state, handler to call
+  trans :pre_checkin, :session_ended, :not_in_session, :session_ended
+  trans :pre_checkin, :checked_in,    :in_session,     :checked_in 
   trans :in_session,  :session_ended, :not_in_session, :session_ended
   
   context SafeCodeContext.new
