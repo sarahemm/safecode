@@ -18,6 +18,7 @@ EM.run {
   ws = Faye::WebSocket::Client.new(webservice_url)
   # block to check for new input and send it to the web service if it's complete
   EM::PeriodicTimer.new(1) do
+    box.connect if !box.connected?
     next if !box.connected? or !ws
     #puts "Checking box"
     if(box.events.length == 0) then

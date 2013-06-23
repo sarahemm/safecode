@@ -95,11 +95,11 @@ module SafeCode
       end
       
       def status=(lighting)
+        return false if @box == nil
         @box.print (lighting.include?(:red)   | lighting.include?(:yellow) ? "R" : "r")
         @box.print (lighting.include?(:green) | lighting.include?(:yellow) ? "G" : "g")
         @box.print (lighting.include?(:blue)  ? "B" : "b")
         true
-        false
       end
       
       def set_text
