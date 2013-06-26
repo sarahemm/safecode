@@ -32,6 +32,7 @@ class SafeCodeContext
   def session_ended(code)
     puts "checking code #{code}"
     raise AuthFailedError if code != "1212"  # TODO: configurable code
+    @session_start = @session_length = nil
     notify_monitors
   end
 
@@ -158,6 +159,7 @@ get '/update' do
         end
         response = Hash.new
         response[:status] = cmd_status
+        response[:alert] = :checkin_missed if @@fsm.context.session_start and Time.now.to_i > @@fsm.context.session_start + @@fsm.context.session_length
         response[:state] = @@fsm.state
         ws.send response.to_json
       end
