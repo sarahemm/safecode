@@ -11,8 +11,8 @@ webservice_url = "http://localhost:4567/update"
 serial_port = "/dev/tty.usbmodem621"
 
 #box = SafeCode::Hardware::SafeCodeProtoBox.new :port => serial_port
-box = SafeCode::Hardware::SafeCodeBox.new :port => serial_port
-#box = SafeCode::Hardware::Simulator.new
+#box = SafeCode::Hardware::SafeCodeBox.new :port => serial_port
+box = SafeCode::Hardware::Simulator.new
 
 EM.run {
   ws = Faye::WebSocket::Client.new(webservice_url)
@@ -37,6 +37,7 @@ EM.run {
   
   ws.on :message do |event|
     response = JSON.parse(event.data, :symbolize_names => true)
+    box.alert = response[:alert]  # TODO: think about this more
     case(response[:status])
       when "ok"
         case(response[:state])

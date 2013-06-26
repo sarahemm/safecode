@@ -76,6 +76,12 @@ module SafeCode
         buf = ""
       end
       
+      def events
+        get_data
+        process_events
+        @event_queue
+      end
+      
       def set_lighting(lighting)
         #@box.print (lighting.includes?(:red)   ? "R" : "r")
         #@box.print (lighting.includes?(:green) ? "G" : "g")
