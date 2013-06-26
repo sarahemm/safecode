@@ -132,7 +132,6 @@
 <hole x="10.5" y="91" drill="6"/>
 <hole x="112.5" y="92" drill="6"/>
 <hole x="113" y="-1.5" drill="6"/>
-<text x="54" y="96.5" size="1.778" layer="21">SafeCode Box</text>
 <text x="61.7855" y="61.595" size="2.54" layer="21" align="center">SafeCode Box</text>
 <text x="61.7855" y="58.9915" size="1.27" layer="21" align="center">Rev001</text>
 <text x="80.01" y="39.8145" size="1.27" layer="21" align="center">ICSP</text>
