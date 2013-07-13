@@ -99,7 +99,10 @@ module SafeCode
         @box.print (lighting.include?(:red)   | lighting.include?(:yellow) ? "R" : "r")
         @box.print (lighting.include?(:green) | lighting.include?(:yellow) ? "G" : "g")
         @box.print (lighting.include?(:blue)  ? "B" : "b")
-        true
+      end
+      
+      def alert=(sound)
+        @box.print (sound == nil ? 'x' : 'X')
       end
       
       def set_text
