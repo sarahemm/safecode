@@ -11,8 +11,8 @@ webservice_url = "http://localhost:4567/update"
 serial_port = "/dev/tty.usbmodem621"
 
 #box = SafeCode::Hardware::SafeCodeProtoBox.new :port => serial_port
-#box = SafeCode::Hardware::SafeCodeBox.new :port => serial_port
-box = SafeCode::Hardware::Simulator.new
+box = SafeCode::Hardware::SafeCodeBox.new :port => serial_port
+#box = SafeCode::Hardware::Simulator.new
 
 EM.run {
   ws = Faye::WebSocket::Client.new(webservice_url)
@@ -42,16 +42,16 @@ EM.run {
       when "ok"
         case(response[:state])
           when "not_in_session"
-            box.status = [:red]
+            box.status = [:green]
           when "pre_checkin"
             box.status = [:yellow]
           when "in_session"
-            box.status = [:green]
-          else
             box.status = [:blue]
+          else
+            box.status = [:red]
         end
       else
-        box.status = [:blue]
+        box.status = [:red]
     end
   end
   
