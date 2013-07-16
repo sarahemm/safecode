@@ -46,7 +46,11 @@ EM.run {
           when "pre_checkin"
             box.status = [:yellow]
           when "in_session"
-            box.status = [:blue]
+            if(response[:distress]) then
+              box.status = [:white]
+            else
+              box.status = [:blue]
+            end
           else
             box.status = [:red]
         end

@@ -34,7 +34,7 @@ function set_last_comms(time) {
   }
 }
 
-function set_session_info(state, time, length) {
+function set_session_info(state, distress, time, length) {
   if(state == 'not_in_session') {
     state_text = "Not in session";
     checkin_text = ""
@@ -52,20 +52,22 @@ function set_session_info(state, time, length) {
       checkin_text = "Next check-in was expected " + Math.floor(Math.abs(time) / 60) + "m " + Math.abs(time) % 60 + "s ago!";
     }
   } else if(state == 'in_session') {
-    state_text = "In session, initial check-in OK";
-    progress_pct = (length-time) / length * 100;
-    if(time >= 0) {
-      bar_class = "success";
-      checkin_text = "Next check-in expected in " + Math.floor(time / 60) + "m " + time % 60 + "s";
-    } else {
+    if(distress == true) {
+      state_text = "Initial check-in indicated DISTRESS";
+      checkin_text = ""
+      progress_pct = 100;
       bar_class = "danger active";
-      checkin_text = "Next check-in was expected " + Math.floor(Math.abs(time) / 60) + "m " + Math.abs(time) % 60 + "s ago!";
+    } else {
+      state_text = "In session, initial check-in OK";
+      progress_pct = (length-time) / length * 100;
+      if(time >= 0) {
+        bar_class = "success";
+        checkin_text = "Next check-in expected in " + Math.floor(time / 60) + "m " + time % 60 + "s";
+      } else {
+        bar_class = "danger active";
+        checkin_text = "Next check-in was expected " + Math.floor(Math.abs(time) / 60) + "m " + Math.abs(time) % 60 + "s ago!";
+      }
     }
-  } else if(state == 'not_ok') {
-    state_text = "Initial check-in NOT OK";
-    checkin_text = ""
-    progress_pct = 100;
-    bar_class = "danger active";
   } else {
     state_text = "Unknown";
     checkin_text = ""
@@ -95,7 +97,7 @@ function connectWebservice() {
       last_status = JSON.parse(msg.data);
       set_connected_status('daemon', 'Room Daemon', last_status.daemon_connection);
       set_connected_status('box', 'SafeCode Box', last_status.box_connection);
-      set_session_info(last_status.session_state, last_status.time_until_checkin, last_status.session_length);
+      set_session_info(last_status.session_state, last_status.session_distress, last_status.time_until_checkin, last_status.session_length);
       $('#location_text').html("Location: " + last_status.location);
       last_comms = 0; 
     };
@@ -115,7 +117,7 @@ window.onload = function() {
   setInterval(function() {
     if(!last_status) { return; }
     last_status.time_until_checkin--;
-    set_session_info(last_status.session_state, last_status.time_until_checkin, last_status.session_length);
+    set_session_info(last_status.session_state, last_status.session_distress, last_status.time_until_checkin, last_status.session_length);
     last_comms++;
     set_last_comms(last_comms);
   }, 1000);

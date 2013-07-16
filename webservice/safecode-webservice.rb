@@ -12,9 +12,11 @@ config_file '../safecode.yaml'
 @@update_socket = nil
 @@monitor_sockets = []
 @@location = "Unknown"
+@@normal_code = "" # TODO: seems dirty
+@@distress_code = "" # TODO: seems dirty
 
 class SafeCodeContext
-  attr_accessor :statemachine, :session_length, :session_start
+  attr_accessor :statemachine, :session_length, :session_start, :session_distress
   
   class AuthFailedError < SecurityError
   end
@@ -26,21 +28,29 @@ class SafeCodeContext
     puts "initializing new session"
     @session_start = Time.now.to_i
     @session_length = length
+    @session_distress = false
     notify_monitors
   end
   
   def session_ended(code)
     puts "checking code #{code}"
-    raise AuthFailedError if code != "1212"  # TODO: configurable code
+    raise AuthFailedError if code != @@normal_code
     @session_start = @session_length = nil
     notify_monitors
   end
 
   def checked_in(code, length)
     puts "checking code #{code}"
-    raise AuthFailedError if code != "1212"  # TODO: configurable code
-    initialize_session(length)
-    notify_monitors
+    if(code == @@normal_code) then
+      initialize_session(length)
+      notify_monitors
+    elsif(code == @@distress_code) then
+      initialize_session(length)
+      @session_distress = true
+      notify_monitors
+    else
+      raise AuthFailedError if code != @@normal_code
+    end
   end
   
   def notify_monitors
@@ -50,6 +60,7 @@ class SafeCodeContext
       status_update[:session_state] = @statemachine.state
       status_update[:session_start] = @session_start;
       status_update[:session_length] = @session_length;
+      status_update[:session_distress] = @session_distress;
       status_update[:location] = @@location;
       status_update[:daemon_connection] = (@@update_socket == nil ? false : true)
       if(@session_start != nil) then
@@ -90,6 +101,8 @@ end
 # monitor connections from web browsers
 get '/' do
   p settings.yubikey
+  @@normal_code = settings.codes["normal"]
+  @@distress_code = settings.codes["distress"]
   if !request.websocket?
     erb :index
   else
@@ -160,6 +173,7 @@ get '/update' do
         response = Hash.new
         response[:status] = cmd_status
         response[:alert] = :checkin_missed if @@fsm.context.session_start and Time.now.to_i > @@fsm.context.session_start + @@fsm.context.session_length
+        response[:distress] = @@fsm.context.session_distress
         response[:state] = @@fsm.state
         ws.send response.to_json
       end
