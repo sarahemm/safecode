@@ -34,6 +34,19 @@ function set_last_comms(time) {
   }
 }
 
+function pretty_duration(secs) {
+  hours = Math.floor(secs / (60 * 60));
+  mins = Math.floor((secs - hours*60*60) / 60);
+  secs = secs % 60;
+  if(hours > 0) {
+    return hours + "h " + mins + "m " + secs + "s";
+  } else if(mins > 0) {
+    return mins + "m " + secs + "s";
+  } else {
+    return secs + " seconds";
+  }
+}
+
 function set_session_info(state, distress, time, length) {
   if(state == 'not_in_session') {
     state_text = "Not in session";
@@ -42,14 +55,14 @@ function set_session_info(state, distress, time, length) {
     bar_class = "success";
   } else if(state == 'pre_checkin') {
     state_text = "Client arrived, waiting for initial check-in";
-    checkin_text = "Next check-in expected in " + Math.floor(time / 60) + "m " + time % 60 + "s";
+    checkin_text = "Next check-in expected in " + pretty_duration(time);
     progress_pct = (length-time) / length * 100;
     if(time >= 0) {
       bar_class = "success";
-      checkin_text = "Next check-in expected in " + Math.floor(time / 60) + "m " + time % 60 + "s";
+      checkin_text = "Next check-in expected in " + pretty_duration(time);
     } else {
       bar_class = "danger active";
-      checkin_text = "Next check-in was expected " + Math.floor(Math.abs(time) / 60) + "m " + Math.abs(time) % 60 + "s ago!";
+      checkin_text = "Next check-in was expected " + pretty_duration(Math.abs(time)) + " ago!";
     }
   } else if(state == 'in_session') {
     if(distress == true) {
@@ -62,10 +75,10 @@ function set_session_info(state, distress, time, length) {
       progress_pct = (length-time) / length * 100;
       if(time >= 0) {
         bar_class = "success";
-        checkin_text = "Next check-in expected in " + Math.floor(time / 60) + "m " + time % 60 + "s";
+        checkin_text = "Next check-in expected in " + pretty_duration(time);
       } else {
         bar_class = "danger active";
-        checkin_text = "Next check-in was expected " + Math.floor(Math.abs(time) / 60) + "m " + Math.abs(time) % 60 + "s ago!";
+        checkin_text = "Next check-in was expected " + pretty_duration(Math.abs(time)) + " ago!";
       }
     }
   } else {
