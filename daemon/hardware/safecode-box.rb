@@ -102,6 +102,7 @@ module SafeCode
       end
       
       def alert=(sound)
+        return false if @box == nil
         @box.print (sound == nil ? 'x' : 'X')
       end
       
