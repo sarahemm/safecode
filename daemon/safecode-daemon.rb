@@ -19,10 +19,10 @@ EM.run {
   # block to check for new input and send it to the web service if it's complete
   EM::PeriodicTimer.new(1) do
     box.connect if !box.connected?
-    next if !box.connected? or !ws
+    next if !ws
     #puts "Checking box"
     if(box.events.length == 0) then
-      ws.send({:event => :keepalive}.to_json)
+      ws.send({:event => :keepalive, :box_connection => box.connected?}.to_json)
     else
       box.each_event do |event|
         puts "sending event #{event[:event]} to webservice"
@@ -37,6 +37,7 @@ EM.run {
   
   ws.on :message do |event|
     response = JSON.parse(event.data, :symbolize_names => true)
+    next if !box.connected?
     box.alert = response[:alert]  # TODO: think about this more
     case(response[:status])
       when "ok"

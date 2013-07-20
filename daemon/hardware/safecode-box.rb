@@ -55,7 +55,7 @@ module SafeCode
           @box.each_char do |data|
             @buf += data
           end
-        rescue Errno::ENXIO
+        rescue Errno::ENXIO, NoMethodError
           @box = nil
           return false
         end

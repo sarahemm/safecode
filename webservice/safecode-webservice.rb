@@ -12,6 +12,7 @@ config_file '../safecode.yaml'
 @@update_socket = nil
 @@monitor_sockets = []
 @@location = "Unknown"
+@@box_connection = false
 @@normal_code = "" # TODO: seems dirty
 @@distress_code = "" # TODO: seems dirty
 
@@ -63,6 +64,7 @@ class SafeCodeContext
       status_update[:session_distress] = @session_distress;
       status_update[:location] = @@location;
       status_update[:daemon_connection] = (@@update_socket == nil ? false : true)
+      status_update[:box_connection] = @@box_connection
       if(@session_start != nil) then
         status_update[:time_until_checkin] = (@session_start + @session_length) - Time.now.to_i
       end
@@ -155,6 +157,7 @@ get '/update' do
         begin
           case cmd[:event].to_sym
             when :keepalive
+              @@box_connection = cmd[:box_connection]
             when :client_arrived
               @@fsm.client_arrived(1*60) # TODO: implement configurable first-check-in time
             when :check_in
