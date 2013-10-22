@@ -64,7 +64,7 @@ class SafeCodeContext
       status_update[:session_distress] = @session_distress;
       status_update[:location] = @@location;
       status_update[:daemon_connection] = (@@update_socket == nil ? false : true)
-      status_update[:box_connection] = @@box_connection
+      status_update[:box_connection] = (@@update_socket == nil ? false : @@box_connection)
       if(@session_start != nil) then
         status_update[:time_until_checkin] = (@session_start + @session_length) - Time.now.to_i
       end
