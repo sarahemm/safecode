@@ -43,13 +43,19 @@ class SafeCodeContext
   def checked_in(code, length)
     puts "checking code #{code}"
     if(code == @@normal_code) then
+      puts "code normal"      
       initialize_session(length)
       notify_monitors
     elsif(code == @@distress_code) then
+      puts "code distress"
       initialize_session(length)
       @session_distress = true
       notify_monitors
     else
+      puts "code bad"
+      p code
+      p @@normal_code
+      
       raise AuthFailedError if code != @@normal_code
     end
   end
