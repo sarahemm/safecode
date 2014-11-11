@@ -148,6 +148,8 @@ end
 
 # update connections from the daemon
 get '/update' do
+  @@normal_code = settings.codes["normal"]
+  @@distress_code = settings.codes["distress"]
   if !request.websocket?
     request.close
   else
